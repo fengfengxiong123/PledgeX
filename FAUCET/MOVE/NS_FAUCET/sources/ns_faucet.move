@@ -15,7 +15,7 @@ fun init (otw: NS_FAUCET,ctx: &mut TxContext){
         none(),
         ctx,
     );
-    transfer::public_transfer(treasuryCap, sender(ctx));
+    transfer::public_share_object(treasuryCap);
     transfer::public_share_object(coinMetadata);
 }
 
