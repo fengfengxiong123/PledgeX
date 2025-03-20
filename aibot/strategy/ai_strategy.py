@@ -1,7 +1,7 @@
 import requests
 import json
 
-from typing import Dict, List
+from typing import Dict
 from strategy.strategy import BaseStrategy
 from strategy.prompt import PROMPT
 from aibot.logger import logger
@@ -18,12 +18,10 @@ class AIStrategy(BaseStrategy):
         self.data_url = self.config['data']['url']
 
 
-    def analyze_market(self):
-        # 以 deep 币为例
-        deep='0xdeeb7a4662eec9f2f3def03fb937a663dddaa2e215b8078a284d026b7946c270::deep::DEEP'
+    def analyze_market(self, coin: str, **kwargs):
         price = self.get_coin_price(
-            address=deep,
-            bar='15m',
+            address=coin,
+            bar=kwargs.get('bar', '15m'),
             limit=1
         )
         if price is None:

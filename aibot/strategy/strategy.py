@@ -1,9 +1,10 @@
-import yaml
 import requests
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
-from pathlib import Path
+from typing import Any, Dict
+from dataclasses import dataclass
+from datetime import datetime
+from uuid import uuid4
 
 from aibot.logger import logger
 
@@ -16,7 +17,7 @@ class BaseStrategy(ABC):
 
 
     @abstractmethod
-    def analyze_market(self, price: List[float]):
+    def analyze_market(self, coin: str, **kwargs):
         raise NotImplementedError
         
 
@@ -53,3 +54,16 @@ class BaseStrategy(ABC):
             "决策": action,
             "理由": reason
         }
+    
+
+@dataclass
+class TransactionRecord:
+    """机器人交易记录"""
+    timestamp: datetime
+    action: str
+    symbol: str
+    quantity: float
+    price: float
+    fee: float
+    status: str
+    transaction_id: str = str(uuid4())

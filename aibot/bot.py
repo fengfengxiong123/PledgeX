@@ -1,14 +1,16 @@
 import time
 import yaml
 import strategy
+import subprocess
 from pysui import SuiConfig, SyncClient
-from pysui.sui.sui_types import ObjectID
+# from pysui.sui.sui_types import ObjectID
 
 from pathlib import Path
 from aibot.logger import logger
 
 
 class StupidSuiTradeBot:
+    """sui 交易机器人"""
     def __init__(self, config_path: str = '.config.yaml'):
         self.config = self._load_config(config_path)
 
@@ -17,10 +19,10 @@ class StupidSuiTradeBot:
         network_config = self.config['network'][self.network_env]
         logger.info(f"环境：{self.network_env}")
         
-        # Sui 客户端
+        # sui 客户端配置
         self.sui_client = self._init_sui_client(network_config)
         
-        # 配置策略
+        # 策略配置
         self.strategies = []
         strategies = self.config['strategies']
         for name in strategies:
@@ -52,22 +54,43 @@ class StupidSuiTradeBot:
         return SyncClient(sui_config)
     
 
+    def _call_cmd(self, cmd):
+        """运行指定命令"""
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding='utf-8'
+        )
+
+        output = result.stdout
+        logger.info(output)
+    
+
     def call_add(self):
-        pass
-        print('call add')
+        # TODO
+        logger.info('call add')
 
 
     def call_decrease(self):
-        pass
-        print('call decrease')
+        # TODO
+        logger.info('call decrease')
 
 
     def _execute(self):
         """处理单个周期的工作流程"""
 
-        signals = [strategy.analyze_market() for strategy in self.strategies]
+        # deep
+        coin='0xdeeb7a4662eec9f2f3def03fb937a663dddaa2e215b8078a284d026b7946c270::deep::DEEP'
+        params = {
+            'bar': '15m'
+        }
+        signals = [strategy.analyze_market(coin, params) for strategy in self.strategies]
         # TODO: 根据优先级排序
-        print(signals)
+        # xxx
 
         if signals[0]['决策'] == '加仓':
             logger.info('执行 AI 加仓操作')
@@ -80,8 +103,10 @@ class StupidSuiTradeBot:
     def run(self):
         """启动无限循环"""
         logger.info('AI 服务启动...')
-        # while True:
-        for i in range(1):
+
+        # TODO: 执行失败时如何处理？
+        while True:
+        # for i in range(1):
             try:
                 self._execute()
                 logger.info(f'当前周期执行结束，等待 {self.interval} 秒')
