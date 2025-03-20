@@ -3,7 +3,8 @@ import yaml
 import strategy
 import subprocess
 from pysui import SuiConfig, SyncClient
-# from pysui.sui.sui_types import ObjectID
+from pysui.sui.sui_txn import SyncTransaction
+from pysui.sui.sui_types import SuiAddress
 
 from pathlib import Path
 from aibot.logger import logger
@@ -32,6 +33,7 @@ class StupidSuiTradeBot:
         self.contract_address = self.config['contracts'][self.network_env]
         self.data_url = self.config['data']['url']
         self.interval = self.config['settings'].get('interval_seconds', 3600)
+        self.gas_budget = self.config['settings'].get('gas_budget', 100000)
 
 
     def _load_config(self, config_path):
@@ -52,6 +54,42 @@ class StupidSuiTradeBot:
             prv_keys=[network_config['private_key']]
         )
         return SyncClient(sui_config)
+    
+
+    def _call_contract_method(
+        self,
+        sender_address: str,
+        target: str,
+        arguments: list,
+        type_arguments: list
+    ):
+        """通过 pysui 调用智能合约方法"""
+        txer = SyncTransaction(
+            client=self.sui_client,
+            initial_sender=SuiAddress(sender_address),
+            initial_gas=self.gas_budget
+        )
+
+        txer.move_call(
+            target=target,
+            arguments=arguments,
+            type_arguments=type_arguments
+        )
+
+        result = txer.execute()
+        
+        if result.is_ok():
+            return {
+                "status": "success",
+                "data": result.result_data.to_json(indent=2) 
+                        if hasattr(result.result_data, "to_json") 
+                        else str(result.result_data)
+            }
+        else:
+            return {
+                "status": "error",
+                "message": result.result_string
+            }
     
 
     def _call_cmd(self, cmd):
