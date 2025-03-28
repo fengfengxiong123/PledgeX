@@ -1,4 +1,4 @@
-import { Tabs, Spin } from "antd";
+import { Tabs, Spin, Pagination } from "antd";
 import styles from "./index.module.scss";
 import { useEffect, useState } from "react";
 
@@ -10,7 +10,7 @@ interface NewsItem {
   projects: Array<{ core_id: number; core_name: string }>;
 }
 
-const NewsList = ({ data }: { data: NewsItem[] }) => {
+const NewsList = ({ data, total, onPageChange, pageSize }: { data: NewsItem[]; total: number; onPageChange: (page: number) => void; pageSize: number }) => {
   return (
     <div className={styles.left}>
       <div className={styles.title}>新闻聚合</div>
@@ -33,6 +33,14 @@ const NewsList = ({ data }: { data: NewsItem[] }) => {
           </div>
         </div>
       ))}
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+        <Pagination
+          current={Math.ceil(data.length / pageSize)}
+          total={total}
+          pageSize={pageSize}
+          onChange={onPageChange}
+        />
+      </div>
     </div>
   );
 };
@@ -43,22 +51,27 @@ function Index() {
   const [dailyData, setDailyData] = useState<NewsItem[]>([]);
   const [allData, setAllData] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // 当前页码
+  const [pageSize, setPageSize] = useState(10); // 每页显示条数
+  const [total, setTotal] = useState(0); // 总数据条数
 
-  const fetchData = async (type: "day" | "all") => {
+  const fetchData = async (type: "day" | "all", page: number, pageSize: number) => {
     setLoading(true);
     try {
       const url =
         type === "day"
-          ? "http://127.0.0.1:9000/api/info_agg/content/list/agg_day"
-          : "http://127.0.0.1:9000/api/info_agg/content/list";
+          ? `http://127.0.0.1:9000/api/info_agg/content/list/agg_day?page=${page}&pageSize=${pageSize}`
+          : `http://127.0.0.1:9000/api/info_agg/content/list?page=${page}&pageSize=${pageSize}`;
 
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         if (type === "day") {
           setDailyData(data.results);
+          setTotal(data.total); // 假设后端返回总条数
         } else {
           setAllData(data.results);
+          setTotal(data.total); // 假设后端返回总条数
         }
       }
     } catch (error) {
@@ -69,11 +82,16 @@ function Index() {
   };
 
   useEffect(() => {
-    fetchData(activeKey as "day" | "all");
-  }, [activeKey]);
+    fetchData(activeKey as "day" | "all", currentPage, pageSize);
+  }, [activeKey, currentPage, pageSize]);
 
   const handleTabChange = (key: string) => {
     setActiveKey(key);
+    setCurrentPage(1); // 切换标签时重置页码
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const initialData = [{
@@ -95,7 +113,12 @@ function Index() {
               label: "每日新闻摘要",
               children: (
                 <Spin spinning={loading}>
-                  <NewsList data={dailyData.length ? dailyData : initialData} />
+                  <NewsList
+                    data={dailyData.length ? dailyData : initialData}
+                    total={total}
+                    onPageChange={handlePageChange}
+                    pageSize={pageSize}
+                  />
                 </Spin>
               ),
             },
@@ -104,7 +127,12 @@ function Index() {
               label: "新闻摘要",
               children: (
                 <Spin spinning={loading}>
-                  <NewsList data={allData.length ? allData : initialData} />
+                  <NewsList
+                    data={allData.length ? allData : initialData}
+                    total={total}
+                    onPageChange={handlePageChange}
+                    pageSize={pageSize}
+                  />
                 </Spin>
               ),
             },
