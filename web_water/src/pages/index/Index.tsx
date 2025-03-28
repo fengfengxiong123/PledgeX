@@ -58,10 +58,15 @@ function Index() {
   const fetchData = async (type: "day" | "all", page: number, pageSize: number) => {
     setLoading(true);
     try {
+      // const url =
+      //   type === "day"
+      //     ? `http://127.0.0.1:9000/api/info_agg/content/list/agg_day?page=${page}&pageSize=${pageSize}`
+      //     : `http://127.0.0.1:9000/api/info_agg/content/list?page=${page}&pageSize=${pageSize}`;
+
       const url =
         type === "day"
-          ? `http://127.0.0.1:9000/api/info_agg/content/list/agg_day?page=${page}&pageSize=${pageSize}`
-          : `http://127.0.0.1:9000/api/info_agg/content/list?page=${page}&pageSize=${pageSize}`;
+          ? `http://61.171.56.226:9091/api/info_agg/content/list/agg_day?page=${page}&pageSize=${pageSize}`
+          : `http://61.171.56.226:9091/api/info_agg/content/list?page=${page}&pageSize=${pageSize}`;
 
       const res = await fetch(url);
       if (res.ok) {
@@ -69,9 +74,11 @@ function Index() {
         if (type === "day") {
           setDailyData(data.results);
           setTotal(data.total); // 假设后端返回总条数
+          setPageSize(10)
         } else {
           setAllData(data.results);
           setTotal(data.total); // 假设后端返回总条数
+          setPageSize(10)
         }
       }
     } catch (error) {
