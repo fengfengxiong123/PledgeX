@@ -1,4 +1,6 @@
 .index {
+  color: white;      // 显式定义文字颜色（重要！）
+  background: #000;
   .top {
     height: 100px;
     margin: 15px 0;
@@ -39,6 +41,22 @@
     }
   }
   .wrap {
+    // index.module.scss
+    :global {
+      // 覆盖 Tabs 组件样式
+      .ant-tabs-tab {
+        color: white !important;  // Tab 标签文字颜色
+      }
+      
+      .ant-tabs-content {
+        color: white;            // Tab 内容区文字颜色
+      }
+      .ant-tabs-nav-wrap,
+      .ant-tabs-content,
+      .ant-spin-container {
+        background: inherit !important; // 继承父级背景
+      }
+    }
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -62,8 +80,13 @@
         line-height: 1.5;
         color: rgba(255, 255, 255, 0.5);
         font-size: 14px;
-        .table_title_item {
+        .table_title_item_content {
+          flex: 4;
+          text-align: center; /* 水平居中 */
+        }
+        .table_title_item_date {
           flex: 1;
+          text-align: center; /* 水平居中 */
         }
       }
       .table_wrap {
@@ -71,9 +94,15 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        .table_wrap_item {
+        .table_wrap_item_content {
+          font-size: larger;
+          flex: 4;
+          margin: 10px 0;
+        }
+        .table_wrap_item_date {
           flex: 1;
           margin: 10px 0;
+          text-align: center; /* 水平居中 */
         }
       }
     }
