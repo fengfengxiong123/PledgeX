@@ -10,32 +10,35 @@ interface NewsItem {
   projects: Array<{ core_id: number; core_name: string }>;
 }
 
-const NewsList = ({ data, total, onPageChange, pageSize }: { data: NewsItem[]; total: number; onPageChange: (page: number) => void; pageSize: number }) => {
+const NewsList = ({ data, total, onPageChange, pageSize, currentPage }:
+  { data: NewsItem[]; total: number; onPageChange: (page: number) => void; pageSize: number; currentPage: number; }) => {
   return (
     <div className={styles.left}>
-      <div className={styles.title}>新闻聚合</div>
-      <div className={styles.table_title}>
-        <div className={styles.table_title_item_content}>内容</div>
-        <div className={styles.table_title_item_date}>时间</div>
-        <div className={styles.table_title_item_date}>相关</div>
-      </div>
+      {/* 遍历数据 */}
       {data.map((item) => (
-        <div className={styles.table_wrap} key={item.id}>
-          <div className={styles.table_wrap_item_content}>{item.content}</div>
-          <div className={styles.table_wrap_item_date}>{item.publish_time}</div>
-          <div className={styles.table_wrap_item_date}>
-            {item.projects.map((item2, index) => (
-              <span key={item2.core_id}>
-                {item2.core_name}
-                {index < item.projects.length - 1 && " | "}
-              </span>
-            ))}
+        <div className={styles.card} key={item.id}>
+          {/* 时间和项目方 */}
+          <div className={styles.header}>
+            <div className={styles.date}>{item.publish_time}</div>
+            <div className={styles.projects}>
+              {item.projects.map((item2, index) => (
+                <span key={item2.core_id}>
+                  {item2.core_name}
+                  {index < item.projects.length - 1 && ' | '}
+                </span>
+              ))}
+            </div>
           </div>
+
+          {/* 内容 */}
+          <div className={styles.content}>{item.content}</div>
         </div>
       ))}
+
+      {/* 分页 */}
       <div style={{ marginTop: "20px", textAlign: "center" }}>
         <Pagination
-          current={Math.ceil(data.length / pageSize)}
+          current={currentPage}
           total={total}
           pageSize={pageSize}
           onChange={onPageChange}
@@ -125,6 +128,7 @@ function Index() {
                     total={total}
                     onPageChange={handlePageChange}
                     pageSize={pageSize}
+                    currentPage={currentPage}
                   />
                 </Spin>
               ),
@@ -139,6 +143,7 @@ function Index() {
                     total={total}
                     onPageChange={handlePageChange}
                     pageSize={pageSize}
+                    currentPage={currentPage}
                   />
                 </Spin>
               ),
