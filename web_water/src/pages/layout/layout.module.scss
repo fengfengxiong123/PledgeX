@@ -3,4 +3,15 @@
   .content {
     min-height: calc(100vh - 140px);
   }
+
+  // 针对中等屏幕优化（可选）
+  @media (max-width: 1024px) {
+    padding: 0 40px; // 中等屏幕时适当减少边距
+  }
+  // 针对小屏幕优化
+  @media (max-width: 768px) {
+    padding: 0 10px; // 小屏幕时减少左右边距
+  }
+
+
 }
