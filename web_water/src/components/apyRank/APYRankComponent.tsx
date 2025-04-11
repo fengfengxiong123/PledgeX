@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Table, Tag } from 'antd';
+import { Table, Tag, } from 'antd';
+
 
 interface ProtocolData {
     key: string;
@@ -10,6 +11,7 @@ interface ProtocolData {
     tvl: number;
     lastUpdated: string;
 }
+
 
 function APYRankComponent() {
     // 定义状态
@@ -27,12 +29,15 @@ function APYRankComponent() {
                 { text: 'Navi', value: 'Navi' },
                 { text: 'Scallop', value: 'Scallop' },
             ],
-            onChange: (value) => {
+            onChange: (value: string) => {
                 setFilterName(value);
             },
-            onFilter: (value, record) => {
+            onFilter: (value: React.Key | boolean, record: ProtocolData) => {
                 // 忽略大小写进行比较
-                return record.protocolName.toLowerCase() === value.toLowerCase();
+                if (typeof value === 'string') {
+                    return record.protocolName.toLowerCase() === value.toLowerCase();
+                }
+                return false;
             },
             sorter: (a: ProtocolData, b: ProtocolData) => a.protocolName.localeCompare(b.protocolName),
             key: 'protocolName',
@@ -47,11 +52,16 @@ function APYRankComponent() {
                 { text: '质押', value: '质押' },
                 { text: '衍生品', value: '衍生品' },
             ],
-            onChange: (value) => {
+            onChange: (value: string) => {
                 setFilterType(value);
             },
             // filterMultiple: false, // 单选
-            onFilter: (value, record) => record.protocolType === value,
+            onFilter: (value: React.Key | boolean, record: ProtocolData) => {
+                if (typeof value === 'string') {
+                    return record.protocolType === value;
+                }
+                return false;
+            },
             sorter: (a: ProtocolData, b: ProtocolData) => a.protocolName.localeCompare(b.protocolName),
             key: 'protocolType',
         },
@@ -60,13 +70,13 @@ function APYRankComponent() {
             dataIndex: 'apy',
             key: 'apy',
             sorter: (a: ProtocolData, b: ProtocolData) => a.apy - b.apy, // Ant Design 自带排序逻辑
-            render: value => `${value.toFixed(2)}%`,
+            render: (value: number) => `${value.toFixed(2)}%`,
         },
         {
             title: '风险等级',
             dataIndex: 'riskLevel',
             key: 'riskLevel',
-            render: value => {
+            render: (value: "low" | "medium" | "high") => {
                 const colorMap = {
                     low: 'green',
                     medium: 'orange',
@@ -79,7 +89,7 @@ function APYRankComponent() {
             title: 'TVL(万)',
             dataIndex: 'tvl',
             key: 'tvl',
-            render: value => `$${(value / 10000).toFixed(2)}万`,
+            render: (value: number) => `$${(value / 10000).toFixed(2)}万`,
             sorter: (a: ProtocolData, b: ProtocolData) => a.tvl - b.tvl, // Ant Design 自带排序逻辑
         },
         {
@@ -132,7 +142,7 @@ function APYRankComponent() {
             </div>
             <Table
                 columns={columns}
-                dataSource={filteredData || []}
+                dataSource={filteredData}
                 loading={loading}
                 // pagination={{ pageSize: 10 }}
                 pagination={false}

@@ -3,8 +3,6 @@ import APYRankComponent from "@/components/apyRank/APYRankComponent"; // 引入�
 
 // 主组件
 function Index() {
-  
-
   return (
     <div >
       <div>
