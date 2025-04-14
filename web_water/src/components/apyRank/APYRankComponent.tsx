@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Table } from 'antd';
+import { useSuiClient, useCurrentAccount } from "@mysten/dapp-kit";
 
 
 interface ProtocolData {
@@ -14,6 +15,7 @@ interface ProtocolData {
     price: string;
     lastUpdated: string;
     cal_tvl: number,
+    owned_value: number,
 }
 
 interface ProtocolApiResponse {
@@ -43,6 +45,8 @@ function APYRankComponent() {
     const [updateTime, setUpdateTime] = useState<string>(''); // 初始数据
     const [loading, setLoading] = useState(false); // 加载状态
 
+    const currentAccount = useCurrentAccount();
+
     // 列定义
     const columns = [
         {
@@ -62,6 +66,13 @@ function APYRankComponent() {
             dataIndex: 'cal_tvl',
             key: 'cal_tvl',
             render: (value: number) => `$${(value).toFixed(2)}万`,
+            sorter: (a: ProtocolData, b: ProtocolData) => a.cal_tvl - b.cal_tvl, // Ant Design 自带排序逻辑
+        },
+        {
+            title: '我持有(U)',
+            dataIndex: 'owned_value',
+            key: 'owned_value',
+            render: (value: number) => `$${value}`,
             sorter: (a: ProtocolData, b: ProtocolData) => a.cal_tvl - b.cal_tvl, // Ant Design 自带排序逻辑
         },
         {
@@ -147,6 +158,7 @@ function APYRankComponent() {
                         price: item.price, // oracle price
                         // 计算 TVL（万）
                         cal_tvl: (item.tvl * Number(item.price) / 1e9) / 10000, // TVL 单位转换为万
+                        owned_value:  0, // 计算我持有的价值
                     }));
                     setData(formattedData);
                     if (result.results.length > 0) {
@@ -161,6 +173,7 @@ function APYRankComponent() {
         };
         fetchData();
     }, []);
+
 
     // 数据过滤
     const filteredData = data.filter(item =>

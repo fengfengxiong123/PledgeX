@@ -1,0 +1,20 @@
+.container {
+    display: flex;
+    align-items: center;
+}
+  
+.balanceText {
+    color: black; // 设置文字颜色为黑色
+    font-size: 16px; // 设置字体大小（可选）
+    margin-right: 8px; // 设置与刷新按钮的间距
+}
+
+.refreshButton {
+    margin-left: 8px;
+    color: #1890ff; // 正常状态下的按钮颜色
+
+    &.disabled {
+        color: #ccc; // 禁用状态下的按钮颜色
+        cursor: not-allowed;
+    }
+}
