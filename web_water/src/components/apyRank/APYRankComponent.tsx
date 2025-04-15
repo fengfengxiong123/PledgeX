@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Table } from 'antd';
-import { useSuiClient, useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useAllTokenBalances } from '@/hooks/useTokenBalance'; // 导入获取所有代币余额的hook
+import { calculateOwnedValue } from '@/utils/calTokenUtils'; // 导入计算持有价值的函数
 
 
 interface ProtocolData {
@@ -15,7 +17,7 @@ interface ProtocolData {
     price: string;
     lastUpdated: string;
     cal_tvl: number,
-    owned_value: number,
+    owned_value: string,
 }
 
 interface ProtocolApiResponse {
@@ -36,7 +38,6 @@ interface ProtocolApiResponse {
     risk_level: number
 }
 
-
 function APYRankComponent() {
     // 定义状态
     const [filterName, setFilterName] = useState<string>();
@@ -44,13 +45,15 @@ function APYRankComponent() {
     const [data, setData] = useState<ProtocolData[]>([]); // 初始数据
     const [updateTime, setUpdateTime] = useState<string>(''); // 初始数据
     const [loading, setLoading] = useState(false); // 加载状态
+    const [tokenTypes, setTokenTypes] = useState<string[]>([]); // 动态 tokenTypes
 
     const currentAccount = useCurrentAccount();
+    const { data: balanceData } = useAllTokenBalances(tokenTypes, currentAccount?.address);
 
     // 列定义
     const columns = [
         {
-            title: '代币名称',
+            title: '代币',
             dataIndex: 'token_name',
             key: 'token_name',
         },
@@ -69,10 +72,10 @@ function APYRankComponent() {
             sorter: (a: ProtocolData, b: ProtocolData) => a.cal_tvl - b.cal_tvl, // Ant Design 自带排序逻辑
         },
         {
-            title: '我持有(U)',
+            title: '我持有($)',
             dataIndex: 'owned_value',
             key: 'owned_value',
-            render: (value: number) => `$${value}`,
+            render: (value: number) => `${value}`,
             sorter: (a: ProtocolData, b: ProtocolData) => a.cal_tvl - b.cal_tvl, // Ant Design 自带排序逻辑
         },
         {
@@ -134,6 +137,24 @@ function APYRankComponent() {
         // },
 
     ];
+    // 从接口获取 tokenTypes 数据
+    useEffect(() => {
+        const fetchTokenTypes = async () => {
+            try {
+                const url = 'http://61.171.56.226:9091/api/info_agg/protocol/token_types';
+                const res = await fetch(url);
+                if (res.ok) {
+                    const result = await res.json();
+                    // 提取 tokenTypes
+                    const types = result.map((item: any) => '0x' + item.token_type);
+                    setTokenTypes(types);
+                }
+            } catch (error) {
+                console.error("获取 tokenTypes 失败:", error);
+            }
+        }
+        fetchTokenTypes();
+    }, []);
 
     // 从接口获取数据
     useEffect(() => {
@@ -148,7 +169,7 @@ function APYRankComponent() {
                     const formattedData = result.results.map((item: ProtocolApiResponse) => ({
                         key: item.id.toString(),
                         token_name: item.supported_tokens,
-                        pool_address: item.pool_address,
+                        pool_address: '0x' + item.pool_address,
                         protocolName: item.name,
                         protocolType: item.protocol_type,
                         apy: parseFloat(item.supply_apy),
@@ -158,7 +179,7 @@ function APYRankComponent() {
                         price: item.price, // oracle price
                         // 计算 TVL（万）
                         cal_tvl: (item.tvl * Number(item.price) / 1e9) / 10000, // TVL 单位转换为万
-                        owned_value:  0, // 计算我持有的价值
+                        owned_value: '-', // 计算我持有的价值
                     }));
                     setData(formattedData);
                     if (result.results.length > 0) {
@@ -174,6 +195,17 @@ function APYRankComponent() {
         fetchData();
     }, []);
 
+    // 钱包连接后，更新owned_value列数据
+    useEffect(() => {
+        if (balanceData) {
+            const updatedData = data.map(item => {
+                const ownedValue = calculateOwnedValue(item.pool_address, balanceData, item.price);
+                return { ...item, owned_value: ownedValue };
+            });
+            console.log("updatedData", updatedData); // 调试输出
+            setData(updatedData);
+        }
+    }, [balanceData, tokenTypes]);
 
     // 数据过滤
     const filteredData = data.filter(item =>

@@ -1,49 +1,9 @@
-import { useSuiClient, useCurrentAccount } from "@mysten/dapp-kit";
-import { useQuery } from "@tanstack/react-query";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { Button, Spin } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import styles from "./coinCount.module.scss";
 
-// 创建自定义 hook
-function useTokenBalance(tokenType: string, accountAddress?: string) {
-    const client = useSuiClient();
-
-    return useQuery({
-        queryKey: ["token-balance", tokenType, accountAddress],
-        queryFn: async () => {
-            if (!accountAddress) return BigInt(0);
-
-            // 如果是 SUI 代币
-            // if (tokenType === "0x2::sui::SUI") {
-            //     const balance = await client.getBalance({
-            //         owner: accountAddress,
-            //     });
-            //     return BigInt(balance.totalBalance); // 假设余额是以 SUI 为单位的
-            // }
-
-            // 如果是其他代币
-            const coins = await client.getAllCoins({
-                owner: accountAddress,
-            });
-            console.log("coins", coins); // 调试输出
-
-            const all_balance = await client.getAllBalances({
-                owner: accountAddress,
-            });
-            console.log("all_balance", all_balance); // 调试输出
-
-            const filteredCoins = coins.data.filter(
-                (coin) => coin.coinType === tokenType
-            );
-
-            return filteredCoins.reduce(
-                (total, coin) => total + BigInt(coin.balance),
-                BigInt(0)
-            );
-        },
-        enabled: !!accountAddress, // 仅在账户地址存在时启用查询
-    });
-}
 
 // 在组件中使用
 function CoinCountComponent() {
